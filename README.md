@@ -9,7 +9,9 @@ MMGCN is built with Python 3.7 with the following packages:
 * scikit-learn == 1.0.2
 
 # Usage
-We provide the scripts for running MMGCN.
+We provide the scripts for running MMGCN.  
+
+
 `python MMGCN.py`
 
 
