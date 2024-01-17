@@ -11,7 +11,7 @@ MMGCN is built with Python 3.7 with the following packages:
 # Usage
 We provide the scripts for running MMGCN.  
 
-
+```
 `python MMGCN.py`
-
+```
 
