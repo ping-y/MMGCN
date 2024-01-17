@@ -7,10 +7,13 @@ from _0_get_impr_type import get_impr_type
 import math
 from typing import Tuple
 import logging
-from get_node_edge_feats import *
+# from get_node_edge_feats import *
 from torch import Tensor, nn
 from typing import List, Optional
 import os
+import pandas as pd
+import numpy as np
+import pickle
 os.environ["DGLBACKEND"] = "pytorch"
 cuda = True if torch.cuda.is_available() else False
 logger = logging.getLogger(__name__)
@@ -63,7 +66,7 @@ def get_W(x, thres_type, threshold=0.00):   # x : [(train_sample, n_feature), ]
     type_flag_adj=get_impr_type(affinity_networks,thres_type)
     type_flag_adj=np.where(adj_hat>0, type_flag_adj, 0)
     stats_type_flag_adj(type_flag_adj)
-    adj_hat, type_flag_adj=get_edge_features(adj_hat, type_flag_adj)
+    # adj_hat, type_flag_adj=get_edge_features(adj_hat, type_flag_adj)
 
     adj_hat=adj_hat.numpy()
     return adj_hat, type_flag_adj
