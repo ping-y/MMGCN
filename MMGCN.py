@@ -7,7 +7,6 @@ from _0_get_impr_type import get_impr_type
 import math
 from typing import Tuple
 import logging
-# from get_node_edge_feats import *
 from torch import Tensor, nn
 from typing import List, Optional
 import os
@@ -58,7 +57,7 @@ def maxmin_scale(df):
     return df
 
 
-def get_W(x, thres_type, threshold=0.00):   # x : [(train_sample, n_feature), ]
+def get_W(x, thres_type, threshold=0.00):  
     affinity_networks = snf.make_affinity(x, metric='euclidean', K=20, mu=0.5)
     adj_hat = torch.FloatTensor(snf.snf(affinity_networks, K=20))
     adj_hat[adj_hat < threshold] = 0
@@ -66,7 +65,6 @@ def get_W(x, thres_type, threshold=0.00):   # x : [(train_sample, n_feature), ]
     type_flag_adj=get_impr_type(affinity_networks,thres_type)
     type_flag_adj=np.where(adj_hat>0, type_flag_adj, 0)
     stats_type_flag_adj(type_flag_adj)
-    # adj_hat, type_flag_adj=get_edge_features(adj_hat, type_flag_adj)
 
     adj_hat=adj_hat.numpy()
     return adj_hat, type_flag_adj
@@ -120,9 +118,6 @@ class GCGCN(nn.Module):
         self.gc1 = model.GraphConvolution(n_in, n_hid)
         self.gc2 = model.GraphConvolution(n_hid, n_hid)
         self.dp1 = nn.Dropout(0.5)
-        # self.fc1 = nn.Linear(n_hid[1], 8)
-        # self.fc2 = nn.Linear(8, n_out)
-        # self.edge_encoder = nn.Embedding(7 + 1, 1, padding_idx=0)
 
     def forward(self, x, adj, attn_weights):
         adj=torch.mul(attn_weights, adj)
@@ -130,7 +125,6 @@ class GCGCN(nn.Module):
         x = F.elu(x)
         x = self.dp1(x)
         return x
-
 
 
 class SemanticAttention(nn.Module):
@@ -187,11 +181,9 @@ class MMGCN(nn.Module):
         self.k_proj = nn.Linear(self.kdim, embed_dim, bias=bias)
         self.v_proj = nn.Linear(self.vdim, embed_dim, bias=bias)
         self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
-
         self.layer_norm=nn.LayerNorm(embed_dim)
         self.bef_out_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
         self.out_proj = nn.Linear(embed_dim, 2, bias=bias)
-
         self.gcgcn1 = GCGCN(input_dim, embed_dim, 2, dropout)
         self.gcgcn_1 = GCGCN(input_dim, embed_dim, 2, dropout)
         self.gcgcn_2 = GCGCN(input_dim, embed_dim, 2, dropout)
@@ -201,20 +193,13 @@ class MMGCN(nn.Module):
         self.gcgcn_6 = GCGCN(input_dim, embed_dim, 2, dropout)
         self.gcgcn_7 = GCGCN(input_dim, embed_dim, 2, dropout)
         self.gcgcn_8 = GCGCN(input_dim, embed_dim, 2, dropout)
-
         self.semanticAttention=SemanticAttention(embed_dim)
-        self.semanticAttention1=SemanticAttention(embed_dim)
-        self.semanticAttention2=SemanticAttention(embed_dim)
-        self.semanticAttention3=SemanticAttention(embed_dim)
-
         self.reset_parameters()
         self.onnx_trace = False
 
 
     def reset_parameters(self):
         if self.qkv_same_dim:
-            # Empirically observed the convergence to be much better with
-            # the scaled initialization
             nn.init.xavier_uniform_(self.k_proj.weight, gain=1 / math.sqrt(2))
             nn.init.xavier_uniform_(self.v_proj.weight, gain=1 / math.sqrt(2))
             nn.init.xavier_uniform_(self.q_proj.weight, gain=1 / math.sqrt(2))
@@ -288,16 +273,14 @@ def prepare(path, view_list, num_class,  set_index, cv_i, dataset,thres_type):
 
     x = [pd.read_csv(path +'{}.csv'.format(name), index_col=0) for name in view_list]
     y = pd.read_csv(path +'y.csv', index_col=0)
-    # snf
+
     tr = [i.loc[train_sample].values for i in x]
     trval = [i.loc[np.concatenate((train_sample, val_sample))].values for i in x]
     trvalte = [i.loc[np.concatenate((train_sample, val_sample, test_sample))].values for i in x]
 
-
     trvalte_adj, trvalte_type_flag_adj = get_W(trvalte, thres_type=thres_type)
     tr_adj, tr_type_flag_adj = trvalte_adj, trvalte_type_flag_adj
     trval_adj, trval_type_flag_adj = trvalte_adj, trvalte_type_flag_adj
-
 
     tr_x = tr[0]
     for i in tr:
@@ -400,7 +383,6 @@ def get_edge_pred_loss(attention_train, is_homorphy, tr_labels):
 
 
 def get_edge_pred_label(gammar, trvalte_adj, tr_labels, val_labels, te_labels):
-    """"""
     y=np.concatenate([tr_labels, val_labels, te_labels])
     flag_1 = np.matmul(y.reshape(-1, 1), y.reshape(1, -1))
     flag_0 = np.matmul((1 - y).reshape(-1, 1), (1 - y).reshape(1, -1))
@@ -497,7 +479,6 @@ def main():
 
             pickle.dump(model_dic, open('models/%s/mdl_set%d_cv%d.pkl' % (dataset, set_index, cv_i), 'wb'))
 
-            # test
             mmGCN.load_state_dict(model_dic)
             mmGCN.eval()
             _3 , attention_test,beta_test = mmGCN(dic['trvalte_x'], dic['trvalte_type_flag_adj'])
