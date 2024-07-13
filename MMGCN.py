@@ -425,7 +425,7 @@ def main():
     early_stop=True
     dataset='MetaBric'
     path = 'Data/%s/'%(dataset)
-    view_list = ['clinical_v3', 'exp', 'cnv']
+    view_list = ['clinical', 'exp', 'cnv']
 
     ls_specific = []
     ls_mean = []
